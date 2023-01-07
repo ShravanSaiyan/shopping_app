@@ -1,6 +1,6 @@
 # shopping_app
 
-A new Flutter project.
+A Shopping Application.
 
 ## Getting Started
 
