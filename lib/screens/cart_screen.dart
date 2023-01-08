@@ -11,7 +11,7 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cart = Provider.of<Cart>(context);
+    final cart = Provider.of<Cart>(context, listen: true);
     final cartItems = cart.cartItems.values.toList();
     return Scaffold(
       appBar: AppBar(
