@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shopping_app/screens/edit_user_product_screen.dart';
 
 class UserProductBuilder extends StatelessWidget {
   final String title;
@@ -20,7 +21,10 @@ class UserProductBuilder extends StatelessWidget {
         child: Row(
           children: [
             IconButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.of(context)
+                    .pushNamed(EditUserProductScreen.routeName);
+              },
               icon: const Icon(Icons.edit),
               color: Theme.of(context).primaryColor,
             ),
