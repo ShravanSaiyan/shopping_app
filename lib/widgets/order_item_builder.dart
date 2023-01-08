@@ -38,7 +38,7 @@ class _OrderItemBuilderState extends State<OrderItemBuilder> {
           if (_isExpanded)
             Container(
               padding: const EdgeInsets.all(10),
-              height: min(widget.orderItem.products.length * 20.0 + 10, 180),
+              height: min(widget.orderItem.products.length * 40.0 + 10, 250),
               child: ListView(
                 children: widget.orderItem.products
                     .map((product) => Row(
