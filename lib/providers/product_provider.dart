@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/product.dart';
 
@@ -50,20 +53,28 @@ class ProductProvider with ChangeNotifier {
     return _products.firstWhere((element) => element.id == productId);
   }
 
-  void addProduct(Product product) {
-    _products.add(product);
-    notifyListeners();
+  Future<void> addProduct(Product product) async {
+    var url = Uri.parse(
+        "https://shopping-app-flutter-3ea73-default-rtdb.firebaseio.com/product.json");
+    try {
+      var response = await http.post(url, body: jsonEncode(product));
+      product.id = jsonDecode(response.body)["name"];
+      _products.add(product);
+      notifyListeners();
+    } catch (error) {
+      rethrow;
+    }
   }
 
-  void updateProduct(Product product) {
+  Future<void> updateProduct(Product product) {
     var existingProductIndex = _products
         .indexWhere((existingProduct) => existingProduct.id == product.id);
     if (existingProductIndex == -1) {
-      addProduct(product);
-      return;
+      return addProduct(product);
     }
     _products[existingProductIndex] = product;
     notifyListeners();
+    return Future.value();
   }
 
   void deleteProduct(String id) {

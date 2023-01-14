@@ -20,6 +20,7 @@ class _AddOrEditUserProductScreenState
   final _imageUrlFocusNode = FocusNode();
   final _imageUrlController = TextEditingController();
   final _form = GlobalKey<FormState>();
+  var isLoading = false;
 
   @override
   void initState() {
@@ -43,15 +44,38 @@ class _AddOrEditUserProductScreenState
     }
   }
 
-  void _saveForm(BuildContext context, Product product) {
+  void _saveForm(BuildContext context, Product product) async {
     var productProvider = Provider.of<ProductProvider>(context, listen: false);
     final isValid = _form.currentState?.validate();
     if (!isValid!) {
       return;
     }
     _form.currentState?.save();
-    productProvider.updateProduct(product);
-    Navigator.of(context).pop();
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      await productProvider.updateProduct(product);
+    } catch (error) {
+      await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                title: const Text("An error has occurred"),
+                content: const Text("Please try again"),
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text("OK"))
+                ],
+              ));
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -69,113 +93,125 @@ class _AddOrEditUserProductScreenState
       floatingActionButton: IconButton(
           icon: const Icon(Icons.save),
           onPressed: () => _saveForm(context, formProductData)),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Form(
-          key: _form,
-          child: ListView(
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Title"),
-                textInputAction: TextInputAction.next,
-                onFieldSubmitted: (_) {
-                  FocusScope.of(context).requestFocus(_priceFocusNode);
-                },
-                onSaved: (title) {
-                  formProductData.title = title!;
-                },
-                validator: (title) {
-                  return (title == null || title.trim().isEmpty)
-                      ? "Please enter the title "
-                      : null;
-                },
-              ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Price"),
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
-                focusNode: _priceFocusNode,
-                onFieldSubmitted: (_) {
-                  FocusScope.of(context).requestFocus(_descriptionFocusNode);
-                },
-                onSaved: (price) {
-                  formProductData.price = double.parse(price!);
-                },
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return "Please enter the price";
-                  }
-                  var price = double.parse(value);
-                  return (price <= 0) ? "Please enter a positive price " : null;
-                },
-              ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Description"),
-                keyboardType: TextInputType.multiline,
-                maxLines: 1,
-                focusNode: _descriptionFocusNode,
-                onSaved: (description) {
-                  formProductData.description = description!;
-                },
-                validator: (description) {
-                  if ((description == null || description.trim().isEmpty)) {
-                    return "Please enter the description ";
-                  } else if (description.length <= 3) {
-                    return "Description should be at least 4 characters";
-                  } else {
-                    return null;
-                  }
-                },
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    margin: const EdgeInsets.only(top: 8, right: 10),
-                    decoration: BoxDecoration(
-                        border: Border.all(width: 1, color: Colors.grey)),
-                    child: _imageUrlController.text.isEmpty
-                        ? const Text("Enter the URL")
-                        : FittedBox(
-                            child: Image.network(_imageUrlController.text),
-                          ),
-                  ),
-                  Expanded(
-                    child: TextFormField(
-                      decoration: const InputDecoration(labelText: "Image Url"),
-                      keyboardType: TextInputType.url,
-                      textInputAction: TextInputAction.done,
-                      focusNode: _imageUrlFocusNode,
-                      controller: _imageUrlController,
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Form(
+                key: _form,
+                child: ListView(
+                  children: [
+                    TextFormField(
+                      decoration: const InputDecoration(labelText: "Title"),
+                      textInputAction: TextInputAction.next,
                       onFieldSubmitted: (_) {
-                        _saveForm(context, formProductData);
+                        FocusScope.of(context).requestFocus(_priceFocusNode);
                       },
-                      onEditingComplete: () {
-                        FocusScope.of(context).unfocus();
-                        setState(() {});
+                      onSaved: (title) {
+                        formProductData.title = title!;
                       },
-                      onSaved: (imageUrl) {
-                        formProductData.imageUrl = imageUrl!;
-                      },
-                      validator: (imageUrl) {
-                        if ((imageUrl == null || imageUrl.trim().isEmpty)) {
-                          return "Please enter the image URL ";
-                        } else if (!imageUrl.startsWith("http") &&
-                            !imageUrl.startsWith("https")) {
-                          return "Please enter a valid image URL";
-                        }
-                        return null;
+                      validator: (title) {
+                        return (title == null || title.trim().isEmpty)
+                            ? "Please enter the title "
+                            : null;
                       },
                     ),
-                  )
-                ],
-              )
-            ],
-          ),
-        ),
-      ),
+                    TextFormField(
+                      decoration: const InputDecoration(labelText: "Price"),
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
+                      focusNode: _priceFocusNode,
+                      onFieldSubmitted: (_) {
+                        FocusScope.of(context)
+                            .requestFocus(_descriptionFocusNode);
+                      },
+                      onSaved: (price) {
+                        formProductData.price = double.parse(price!);
+                      },
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return "Please enter the price";
+                        }
+                        var price = double.parse(value);
+                        return (price <= 0)
+                            ? "Please enter a positive price "
+                            : null;
+                      },
+                    ),
+                    TextFormField(
+                      decoration:
+                          const InputDecoration(labelText: "Description"),
+                      keyboardType: TextInputType.multiline,
+                      maxLines: 1,
+                      focusNode: _descriptionFocusNode,
+                      onSaved: (description) {
+                        formProductData.description = description!;
+                      },
+                      validator: (description) {
+                        if ((description == null ||
+                            description.trim().isEmpty)) {
+                          return "Please enter the description ";
+                        } else if (description.length <= 3) {
+                          return "Description should be at least 4 characters";
+                        } else {
+                          return null;
+                        }
+                      },
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 100,
+                          margin: const EdgeInsets.only(top: 8, right: 10),
+                          decoration: BoxDecoration(
+                              border: Border.all(width: 1, color: Colors.grey)),
+                          child: _imageUrlController.text.isEmpty
+                              ? const Text("Enter the URL")
+                              : FittedBox(
+                                  child:
+                                      Image.network(_imageUrlController.text),
+                                ),
+                        ),
+                        Expanded(
+                          child: TextFormField(
+                            decoration:
+                                const InputDecoration(labelText: "Image Url"),
+                            keyboardType: TextInputType.url,
+                            textInputAction: TextInputAction.done,
+                            focusNode: _imageUrlFocusNode,
+                            controller: _imageUrlController,
+                            onFieldSubmitted: (_) {
+                              _saveForm(context, formProductData);
+                            },
+                            onEditingComplete: () {
+                              FocusScope.of(context).unfocus();
+                              setState(() {});
+                            },
+                            onSaved: (imageUrl) {
+                              formProductData.imageUrl = imageUrl!;
+                            },
+                            validator: (imageUrl) {
+                              if ((imageUrl == null ||
+                                  imageUrl.trim().isEmpty)) {
+                                return "Please enter the image URL ";
+                              } else if (!imageUrl.startsWith("http") &&
+                                  !imageUrl.startsWith("https")) {
+                                return "Please enter a valid image URL";
+                              }
+                              return null;
+                            },
+                          ),
+                        )
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ),
     );
   }
 }
