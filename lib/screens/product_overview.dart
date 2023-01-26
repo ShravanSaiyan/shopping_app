@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping_app/models/cart.dart';
+import 'package:shopping_app/providers/product_provider.dart';
 import 'package:shopping_app/screens/cart_screen.dart';
 import 'package:shopping_app/widgets/app_drawer.dart';
 
@@ -60,7 +61,19 @@ class _ProductOverviewState extends State<ProductOverview> {
           )
         ],
       ),
-      body: GridViewBuilder(isFavorite: _showFavorites),
+      body: FutureBuilder(
+        future:
+            Provider.of<ProductProvider>(context, listen: false).getProducts(),
+        builder: (ctx, data) {
+          if (data.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          } else {
+            return GridViewBuilder(isFavorite: _showFavorites);
+          }
+        },
+      ),
       drawer: const AppDrawer(),
     );
   }

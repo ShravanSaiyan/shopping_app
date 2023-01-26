@@ -53,6 +53,18 @@ class ProductProvider with ChangeNotifier {
     return _products.firstWhere((element) => element.id == productId);
   }
 
+  Future<void> getProducts() async {
+    var url = Uri.parse(
+        "https://shopping-app-flutter-3ea73-default-rtdb.firebaseio.com/product.json");
+
+    try {
+      var response = await http.get(url);
+      print(response.body);
+    } catch (error) {
+      rethrow;
+    }
+  }
+
   Future<void> addProduct(Product product) async {
     var url = Uri.parse(
         "https://shopping-app-flutter-3ea73-default-rtdb.firebaseio.com/product.json");
