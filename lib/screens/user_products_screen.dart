@@ -10,6 +10,10 @@ class UserProductScreen extends StatelessWidget {
 
   const UserProductScreen({Key? key}) : super(key: key);
 
+  Future<void> _onRefresh(BuildContext context) {
+    return Provider.of<ProductProvider>(context, listen: false).getProducts();
+  }
+
   @override
   Widget build(BuildContext context) {
     final productsData = Provider.of<ProductProvider>(context).products;
@@ -20,26 +24,30 @@ class UserProductScreen extends StatelessWidget {
         actions: [
           IconButton(
               onPressed: () {
-                Navigator.of(context).pushNamed(AddOrEditUserProductScreen.routeName,
+                Navigator.of(context).pushNamed(
+                    AddOrEditUserProductScreen.routeName,
                     arguments: {"title": "Add Products"});
               },
               icon: const Icon(Icons.add))
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(10),
-        child: ListView.builder(
-            itemCount: productsData.length,
-            itemBuilder: (_, index) => Column(
-                  children: [
-                    UserProductBuilder(
-                      id: productsData[index].id,
-                      title: productsData[index].title,
-                      imageUrl: productsData[index].imageUrl,
-                    ),
-                    const Divider()
-                  ],
-                )),
+      body: RefreshIndicator(
+        onRefresh: () => _onRefresh(context),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: ListView.builder(
+              itemCount: productsData.length,
+              itemBuilder: (_, index) => Column(
+                    children: [
+                      UserProductBuilder(
+                        id: productsData[index].id,
+                        title: productsData[index].title,
+                        imageUrl: productsData[index].imageUrl,
+                      ),
+                      const Divider()
+                    ],
+                  )),
+        ),
       ),
     );
   }
