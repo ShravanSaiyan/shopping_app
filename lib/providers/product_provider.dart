@@ -6,6 +6,10 @@ import 'package:http/http.dart' as http;
 import '../models/product.dart';
 
 class ProductProvider with ChangeNotifier {
+  String? authToken;
+
+  ProductProvider(this.authToken);
+
   final List<Product> _products = [
     Product(
       id: 'p1',
@@ -55,7 +59,7 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> getProducts() async {
     var url = Uri.parse(
-        "https://shopping-app-flutter-3ea73-default-rtdb.firebaseio.com/product.json");
+        "https://shopping-app-flutter-3ea73-default-rtdb.firebaseio.com/product.json?auth=$authToken");
 
     try {
       var response = await http.get(url);
@@ -67,7 +71,7 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> addProduct(Product product) async {
     var url = Uri.parse(
-        "https://shopping-app-flutter-3ea73-default-rtdb.firebaseio.com/product.json");
+        "https://shopping-app-flutter-3ea73-default-rtdb.firebaseio.com/product.json?auth=$authToken");
     try {
       var response = await http.post(url, body: jsonEncode(product));
       product.id = jsonDecode(response.body)["name"];
