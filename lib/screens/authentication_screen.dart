@@ -30,7 +30,7 @@ class AuthenticationScreen extends StatelessWidget {
                     stops: const [0, 1])),
           ),
           SingleChildScrollView(
-            child: Container(
+            child: SizedBox(
               height: deviceSize.height,
               width: deviceSize.width,
               child: Column(
@@ -84,12 +84,29 @@ class AuthCard extends StatefulWidget {
   State<AuthCard> createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard> {
+class _AuthCardState extends State<AuthCard>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey();
   AuthenticationMode _authenticationMode = AuthenticationMode.login;
   final Map<String, String> _authData = {"email": "", "password": ""};
   bool _isLoading = false;
   final _passwordController = TextEditingController();
+  late AnimationController _animationController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
+    _slideAnimation =
+        Tween(begin: const Offset(0, -1.5), end: const Offset(0, 0)).animate(
+            CurvedAnimation(
+                parent: _animationController, curve: Curves.fastOutSlowIn));
+    _opacityAnimation = Tween(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
+  }
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -141,7 +158,6 @@ class _AuthCardState extends State<AuthCard> {
       }
       _showErrorDialog(errorMessage);
     } catch (error) {
-      print(error);
       var errorMessage = "Authentication failed!";
       _showErrorDialog(errorMessage);
     }
@@ -155,10 +171,12 @@ class _AuthCardState extends State<AuthCard> {
     if (_authenticationMode == AuthenticationMode.login) {
       setState(() {
         _authenticationMode = AuthenticationMode.signUp;
+        _animationController.forward();
       });
     } else {
       setState(() {
         _authenticationMode = AuthenticationMode.login;
+        _animationController.reverse();
       });
     }
   }
@@ -169,13 +187,14 @@ class _AuthCardState extends State<AuthCard> {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       elevation: 8.0,
-      child: Container(
+      child: AnimatedContainer(
         height: _authenticationMode == AuthenticationMode.signUp ? 320 : 260,
         constraints: BoxConstraints(
             minHeight:
                 _authenticationMode == AuthenticationMode.signUp ? 320 : 260),
         width: deviceSize.width * 0.75,
         padding: const EdgeInsets.all(16.0),
+        duration: const Duration(milliseconds: 300),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -213,23 +232,29 @@ class _AuthCardState extends State<AuthCard> {
                   },
                 ),
                 if (_authenticationMode == AuthenticationMode.signUp)
-                  TextFormField(
-                    decoration:
-                        const InputDecoration(labelText: "Confirm Password"),
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return "Please enter the password";
-                      } else if (value.length < 5) {
-                        return "The password size must be greater than 5 characters";
-                      } else if (_passwordController.text != value) {
-                        return "Passwords does not match";
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      _authData["password"] = value!;
-                    },
+                  FadeTransition(
+                    opacity: _opacityAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: TextFormField(
+                        decoration: const InputDecoration(
+                            labelText: "Confirm Password"),
+                        obscureText: true,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return "Please enter the password";
+                          } else if (value.length < 5) {
+                            return "The password size must be greater than 5 characters";
+                          } else if (_passwordController.text != value) {
+                            return "Passwords does not match";
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          _authData["password"] = value!;
+                        },
+                      ),
+                    ),
                   ),
                 const SizedBox(height: 20),
                 if (_isLoading)
@@ -245,8 +270,8 @@ class _AuthCardState extends State<AuthCard> {
                                 horizontal: 30.0, vertical: 8.0)),
                         shape: MaterialStateProperty.all(RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30))),
-                        foregroundColor: MaterialStateProperty.all(
-                            Theme.of(context).primaryColor),
+                        foregroundColor:
+                            MaterialStateProperty.all(Colors.white),
                         textStyle: MaterialStateProperty.all(TextStyle(
                             color: Theme.of(context)
                                 .primaryTextTheme
