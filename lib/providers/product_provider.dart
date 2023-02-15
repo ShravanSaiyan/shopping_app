@@ -62,8 +62,7 @@ class ProductProvider with ChangeNotifier {
         "https://shopping-app-flutter-3ea73-default-rtdb.firebaseio.com/product.json?auth=$authToken");
 
     try {
-      var response = await http.get(url);
-      print(response.body);
+      await http.get(url);
     } catch (error) {
       rethrow;
     }
