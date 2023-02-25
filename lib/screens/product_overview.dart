@@ -4,8 +4,8 @@ import 'package:shopping_app/models/cart.dart';
 import 'package:shopping_app/providers/product_provider.dart';
 import 'package:shopping_app/screens/cart_screen.dart';
 import 'package:shopping_app/widgets/app_drawer.dart';
+import 'package:shopping_app/widgets/badge.dart';
 
-import '../widgets/badge.dart';
 import '../widgets/grid_view_builder.dart';
 
 enum FilterOptions { favorites, all }
@@ -51,7 +51,7 @@ class _ProductOverviewState extends State<ProductOverview> {
                   ]),
           Consumer<Cart>(
             builder: (_, cart, ch) =>
-                Badge(value: cart.cartItemsCount.toString(), child: ch!),
+                CustomBadge(value: cart.cartItemsCount.toString(), child: ch!),
             child: IconButton(
               onPressed: () {
                 Navigator.of(context).pushNamed(CartScreen.routeName);
